@@ -2,7 +2,39 @@
 # |docname| - Runestone API
 # *************************
 # This module implements the API that the Runestone Components use to communicate with a Runestone Server.
+#  **Most of this file is Deprecated**
+# **Do not** make any changes to the following functions. They will be removed in an upcoming release.
+# def compareAndUpdateCookieData(sid: str):
+# def hsblog():
+# def runlog():
+# def gethist():
+# def getuser():
+# def set_tz_offset():
+# def updatelastpage():
+# def getCompletionStatus():
+# def getAllCompletionStatus():
+# def getlastpage():
+# def _getCorrectStats(miscdata, event):
+# def _getStudentResults(question: str):
+# def getaggregateresults():
+# def getpollresults():
+# def gettop10Answers():
+# def getassignmentgrade():
+# def _canonicalize_tz(tstring):
+# def getAssessResults():
+# def tookTimedAssessment():
+# def get_datafile():
+# def _same_class(user1: str, user2: str) -> bool:
+# def login_status():
+# def get_question_source():
 #
+# TODO: Move these to a new controller file (maybe admin.py)
+# def preview_question():
+# def save_donate():
+# def did_donate():
+# def broadcast_code():
+# def update_selected_question():
+# #
 # Imports
 # =======
 # These are listed in the order prescribed by `PEP 8
@@ -185,8 +217,8 @@ def hsblog():
 
     # Process this event.
     if event == "mChoice" and auth.user:
-        answer = request.vars.answer
-        correct = request.vars.correct
+        answer = request.vars.answer or ""
+        correct = request.vars.correct or False
         db.mchoice_answers.insert(
             sid=sid,
             timestamp=ts,
@@ -198,10 +230,10 @@ def hsblog():
         )
     elif event == "fillb" and auth.user:
         answer_json = request.vars.answer
-        correct = request.vars.correct
+        correct = request.vars.correct or False
         # Grade on the server if needed.
         do_server_feedback, feedback = is_server_feedback(div_id, course)
-        if do_server_feedback:
+        if do_server_feedback and answer_json is not None:
             correct, res_update = fitb_feedback(answer_json, feedback)
             res.update(res_update)
             pct = res["percent"]
@@ -220,7 +252,7 @@ def hsblog():
     elif event == "dragNdrop" and auth.user:
         answers = request.vars.answer
         minHeight = request.vars.minHeight
-        correct = request.vars.correct
+        correct = request.vars.correct or False
 
         db.dragndrop_answers.insert(
             sid=sid,
@@ -233,7 +265,7 @@ def hsblog():
             percent=pct,
         )
     elif event == "clickableArea" and auth.user:
-        correct = request.vars.correct
+        correct = request.vars.correct or False
         db.clickablearea_answers.insert(
             sid=sid,
             timestamp=ts,
@@ -245,8 +277,8 @@ def hsblog():
         )
 
     elif event == "parsons" and auth.user:
-        correct = request.vars.correct
-        answer = request.vars.answer
+        correct = request.vars.correct or False
+        answer = request.vars.answer or ""
         source = request.vars.source
         db.parsons_answers.insert(
             sid=sid,
@@ -260,8 +292,8 @@ def hsblog():
         )
 
     elif event == "codelensq" and auth.user:
-        correct = request.vars.correct
-        answer = request.vars.answer
+        correct = request.vars.correct or False
+        answer = request.vars.answer or ""
         source = request.vars.source
         db.codelens_answers.insert(
             sid=sid,
@@ -1199,7 +1231,7 @@ def getAssessResults():
         #
         res = {"answer": rows.answer, "timestamp": str(rows.timestamp)}
         do_server_feedback, feedback = is_server_feedback(div_id, course)
-        if do_server_feedback:
+        if do_server_feedback and rows.answer != None:
             correct, res_update = fitb_feedback(rows.answer, feedback)
             res.update(res_update)
         return json.dumps(res)
@@ -1646,7 +1678,7 @@ def get_question_source():
         json: html source for this question
     """
     prof = False
-    points = request.vars.points
+    points = request.vars.points or 0  # no nulls allowed
     logger.debug(f"POINTS = {points}")
     min_difficulty = request.vars.min_difficulty
     max_difficulty = request.vars.max_difficulty
